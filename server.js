@@ -1,13 +1,38 @@
-const express = require('express')
+import * as dotenv from 'dotenv'
+dotenv.config()
+
+import express, { json } from 'express'
+import connectDB from './database/db'
+import path from 'path'
+
+import userRoute from './routes/users'
+import authRoute from './routes/auth'
+import contactRoute from './routes/contacts'
+
+
 const app = express()
 
-app.get('/', (req, res) => res.send({msg: 'Welcome to the ContactKeeper API...'}))
+console.log(process.env.MONGO_URI)
+// Connect Database
+connectDB()
+
+// Init middleware
+app.use(json({extended: false}))
+
+
 
 // Define Routes
-app.use('/api/users', require('./routes/users'))
-app.use('/api/auth', require('./routes/auth'))
-app.use('/api/contacts', require('./routes/contacts'))
+app.use('/api/users', userRoute)
+app.use('/api/auth', authRoute)
+app.use('/api/contacts', contactRoute)
 
+
+// Serve static assests in production
+if(process.env.NODE_ENV === 'production') {
+  app.use(express.static('client/build'))
+
+  app.get('*', (req, res) => res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html')))
+}
 
 const PORT = process.env.PORT || 5000
 
